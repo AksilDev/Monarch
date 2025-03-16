@@ -1,6 +1,7 @@
 package main;
 
 import entity.Player;
+import tile.TileManager;
 
 import java.awt.*;
 import javax.swing.JPanel;
@@ -12,23 +13,24 @@ final int scale = 3;
 
 
 public final int tileSize = originalTileSize * scale; // 48x48 tile
-final int maxScreenCol = 33;
-final int maxScreenRow = 20;
-//    final int maxScreenCol = 16;
-//    final int maxScreenRow = 12;
-final int screenWidth = tileSize * maxScreenCol; // 1584 pixels
-final int screenHeight = tileSize * maxScreenRow; // 960 pixels
+//    public final int maxScreenCol = 33;
+//    public final int maxScreenRow = 20;
+    public final int maxScreenCol = 16;
+    public final int maxScreenRow = 12;
+    public final int screenWidth = tileSize * maxScreenCol; // 1584 pixels
+    public final int screenHeight = tileSize * maxScreenRow; // 960 pixels
 
     int FPS = 60;
 
+    TileManager tileM = new TileManager(this);
     KeyHandler keyH = new KeyHandler();
     Thread gameThread;
     Player player = new  Player(this,keyH);
 
-    //static position of char
-    int playerX = 50;
-    int playerY = 50;
-    int playerSpeed = 4;
+    //static position of char // not used
+//    int playerX = 50;
+//    int playerY = 50;
+//    int playerSpeed = 4;
 
         public GamePanel() {
             this.setPreferredSize(new Dimension(screenWidth, screenHeight));
@@ -75,6 +77,7 @@ final int screenHeight = tileSize * maxScreenRow; // 960 pixels
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D)g;
 
+            tileM.draw(g2);
             player.draw(g2);
 
             g2.dispose();
