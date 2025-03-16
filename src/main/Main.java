@@ -19,7 +19,7 @@ public class Main {
 
         window.setLocationRelativeTo(null);
         window.setVisible(true);
-//helloworld
+
         gamePanel.startGameThread();
     }
 }
