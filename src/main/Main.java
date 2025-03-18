@@ -14,6 +14,7 @@ public class Main {
 
         GamePanel gamePanel = new GamePanel();
         window.add(gamePanel);
+
 //changes
 //new change
         window.pack();
