@@ -32,6 +32,7 @@ public final int tileSize = originalTileSize * scale; // 48x48 tile
     TileManager tileM = new TileManager(this);
     KeyHandler keyH = new KeyHandler();
     Thread gameThread;
+    public CollisionChecker cChecker = new CollisionChecker(this);
     public Player player = new  Player(this,keyH);
 
     //static position of char // not used
