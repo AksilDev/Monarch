@@ -2,9 +2,11 @@ package entity;
 
 import main.GamePanel;
 import main.KeyHandler;
+import main.UtilityTool;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.AreaAveragingScaleFilter;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
@@ -34,37 +36,42 @@ public class Player extends Entity{
     }
     public void setDefaultValues(){
 
-        worldX = gp.tileSize * 23;
-        worldY = gp.tileSize * 21;
+        worldX = gp.tileSize * 10;
+        worldY = gp.tileSize * 10;
         speed = 4;
         direction ="down";
     }
     public void getPlayerImage(){
 
+        up1 = setup("up1");
+        up2 = setup("up2");
+        up3 = setup("up3");
+        up4 = setup("up4");
+        down1 = setup("down1");
+        down2 = setup("down2");
+        down3 = setup("down3");
+        down4 = setup("down4");
+        left1 = setup("left1");
+        left2 = setup("left2");
+        left3 = setup("left3");
+        left4 = setup("left4");
+        right1 = setup("right1");
+        right2 = setup("right2");
+        right3 = setup("right3");
+        right4 = setup("right4");
+    }
+
+    public BufferedImage setup(String imageName){
+        UtilityTool uTool = new UtilityTool();
+        BufferedImage image = null;
+
         try{
-            up1 = ImageIO.read(getClass().getResourceAsStream("/player/up1.png"));
-            up2 = ImageIO.read(getClass().getResourceAsStream("/player/up2.png"));
-            up3 = ImageIO.read(getClass().getResourceAsStream("/player/up3.png"));
-            up4 = ImageIO.read(getClass().getResourceAsStream("/player/up4.png"));
-
-            down1 = ImageIO.read(getClass().getResourceAsStream("/player/down1.png"));
-            down2 = ImageIO.read(getClass().getResourceAsStream("/player/down2.png"));
-            down3 = ImageIO.read(getClass().getResourceAsStream("/player/down3.png"));
-            down4 = ImageIO.read(getClass().getResourceAsStream("/player/down4.png"));
-
-            left1 = ImageIO.read(getClass().getResourceAsStream("/player/left1.png"));
-            left2 = ImageIO.read(getClass().getResourceAsStream("/player/left2.png"));
-            left3 = ImageIO.read(getClass().getResourceAsStream("/player/left3.png"));
-            left4 = ImageIO.read(getClass().getResourceAsStream("/player/left4.png"));
-
-            right1 = ImageIO.read(getClass().getResourceAsStream("/player/right1.png"));
-            right2 = ImageIO.read(getClass().getResourceAsStream("/player/right2.png"));
-            right3 = ImageIO.read(getClass().getResourceAsStream("/player/right3.png"));
-            right4 = ImageIO.read(getClass().getResourceAsStream("/player/right4.png"));
-        }catch(IOException e){
+            image = ImageIO.read(getClass().getResourceAsStream("/player/"+ imageName +".png"));
+            image = uTool.scaleImage(image, gp.tileSize, gp.tileSize);
+        }catch (IOException e){
             e.printStackTrace();
         }
-
+        return image;
     }
 
     public void update(){
@@ -73,16 +80,12 @@ public class Player extends Entity{
 
             if(keyH.upPressed == true){
                 direction ="up";
-
             }else if(keyH.downPressed == true){
                 direction ="down";
-
             }else if(keyH.leftPressed == true){
                 direction ="left";
-
             }else if(keyH.rightPressed == true){
                 direction ="right";
-
             }
             collisionOn = false;
             gp.cChecker.checkTile(this);
@@ -99,7 +102,6 @@ public class Player extends Entity{
                         worldX += speed;break;
                 }
             }
-
             spriteCounter++;
             if(spriteCounter > 12){
                 if(spriteNum == 1){
@@ -115,8 +117,7 @@ public class Player extends Entity{
 
     }
     public void draw(Graphics2D g2){
-//        g2.setColor(Color.white);
-//        g2.fillRect(x,y,gp.tileSize,gp.tileSize);
+
 
         BufferedImage image = null;
 
@@ -145,9 +146,7 @@ public class Player extends Entity{
             if(spriteNum == 2){
                 image = down2;
             }
-            if(spriteNum == 3){
-                image = down3;
-            }
+
             if(spriteNum == 4){
                 image = down4;
             }
