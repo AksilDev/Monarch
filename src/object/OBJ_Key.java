@@ -1,5 +1,5 @@
-package object;
-
-public class OBJ_Key extends SuperObject{
-
-}
+//package object;
+//
+//public class OBJ_Key extends SuperObject{
+//
+//}
