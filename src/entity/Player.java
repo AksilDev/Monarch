@@ -2,9 +2,11 @@ package entity;
 
 import main.GamePanel;
 import main.KeyHandler;
+import main.UtilityTool;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.AreaAveragingScaleFilter;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
@@ -12,8 +14,16 @@ public class Player extends Entity{
     GamePanel gp;
     KeyHandler keyH;
 
+    public int maxHP = 10;
+    public int currentHP = 10;
+
+    public BufferedImage[][] frames;
+    private int frameIndex;
+    private int directionNum;
+
     public final int screenX;
     public final int screenY;
+    public int spriteCounter = 0;
 
     public Player (GamePanel gp, KeyHandler keyH){
 
@@ -26,166 +36,142 @@ public class Player extends Entity{
         solidArea = new Rectangle();
         solidArea.x = 8;
         solidArea.y = 16;
-        solidArea.width = 32;
-        solidArea.height = 32;
+        solidArea.width = 60;
+        solidArea.height = 60;
 
         setDefaultValues();
-        getPlayerImage();
+        loadSheet();
     }
     public void setDefaultValues(){
 
-        worldX = gp.tileSize * 23;
-        worldY = gp.tileSize * 21;
+        worldX = gp.tileSize * 2;
+        worldY = gp.tileSize * 27;
         speed = 4;
         direction ="down";
     }
-    public void getPlayerImage(){
+
+
+    public void loadSheet() {
+        try {
+            BufferedImage sheet = ImageIO.read(
+                    getClass().getResourceAsStream("/player/orc2_full.png")
+            );
+
+            UtilityTool uTool = new UtilityTool();
+
+            int rows = 4, cols = 8;
+            int frameWidth = 64, frameHeight = 64;
+
+            frames = new BufferedImage[rows][cols];
+
+            for(int row = 0; row < rows; row++){
+                for(int col = 0; col < cols; col++){
+                    BufferedImage sub = sheet.getSubimage(
+                            col * frameWidth,
+                            row * frameHeight,
+                            frameWidth,
+                            frameHeight
+                    );
+                    // scale each frame to tileSize
+                    frames[row][col] = uTool.scaleImage(sub, gp.tileSize * 2, gp.tileSize * 2 );
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public BufferedImage setup(String imageName){
+        UtilityTool uTool = new UtilityTool();
+        BufferedImage image = null;
 
         try{
-            up1 = ImageIO.read(getClass().getResourceAsStream("/player/up1.png"));
-            up2 = ImageIO.read(getClass().getResourceAsStream("/player/up2.png"));
-            up3 = ImageIO.read(getClass().getResourceAsStream("/player/up3.png"));
-            up4 = ImageIO.read(getClass().getResourceAsStream("/player/up4.png"));
-
-            down1 = ImageIO.read(getClass().getResourceAsStream("/player/down1.png"));
-            down2 = ImageIO.read(getClass().getResourceAsStream("/player/down2.png"));
-            down3 = ImageIO.read(getClass().getResourceAsStream("/player/down3.png"));
-            down4 = ImageIO.read(getClass().getResourceAsStream("/player/down4.png"));
-
-            left1 = ImageIO.read(getClass().getResourceAsStream("/player/left1.png"));
-            left2 = ImageIO.read(getClass().getResourceAsStream("/player/left2.png"));
-            left3 = ImageIO.read(getClass().getResourceAsStream("/player/left3.png"));
-            left4 = ImageIO.read(getClass().getResourceAsStream("/player/left4.png"));
-
-            right1 = ImageIO.read(getClass().getResourceAsStream("/player/right1.png"));
-            right2 = ImageIO.read(getClass().getResourceAsStream("/player/right2.png"));
-            right3 = ImageIO.read(getClass().getResourceAsStream("/player/right3.png"));
-            right4 = ImageIO.read(getClass().getResourceAsStream("/player/right4.png"));
-        }catch(IOException e){
+            image = ImageIO.read(getClass().getResourceAsStream("/player/"+ imageName +".png"));
+            image = uTool.scaleImage(image, gp.tileSize, gp.tileSize);
+        }catch (IOException e){
             e.printStackTrace();
+        }
+        return image;
+    }
+
+    public void takeDamage(int damage) {
+        currentHP -= damage;
+        if(currentHP < 0) {
+            currentHP = 0;
+        }
+
+        if(currentHP == 0){
+            gp.gameState = GamePanel.DEATH_STATE;
         }
 
     }
 
-    public void update(){
 
-        if(keyH.upPressed == true || keyH.downPressed == true || keyH.leftPressed == true || keyH.rightPressed == true){
+    public void update() {
 
-            if(keyH.upPressed == true){
-                direction ="up";
-
-            }else if(keyH.downPressed == true){
-                direction ="down";
-
-            }else if(keyH.leftPressed == true){
-                direction ="left";
-
-            }else if(keyH.rightPressed == true){
-                direction ="right";
-
+        boolean moving = false;
+        if(keyH.upPressed || keyH.downPressed || keyH.leftPressed || keyH.rightPressed){moving = true;}
+        if(moving){
+            if(keyH.upPressed){
+                direction = "up";
+                directionNum = 1;
             }
+            else if(keyH.downPressed){
+                direction = "down";
+                directionNum = 0;
+            }
+            else if(keyH.leftPressed){
+                direction = "left";
+                directionNum = 2;
+            }
+            else if(keyH.rightPressed){
+                direction = "right";
+                directionNum = 3;
+            }
+
             collisionOn = false;
             gp.cChecker.checkTile(this);
 
-            if(collisionOn == false){
+
+
+            if(!collisionOn){
                 switch(direction){
-                    case "up":
-                        worldY -= speed;break;
-                    case "down":
-                        worldY += speed;break;
-                    case "left":
-                        worldX -= speed;break;
-                    case "right":
-                        worldX += speed;break;
+                    case "up"   -> worldY -= speed;
+                    case "down" -> worldY += speed;
+                    case "left" -> worldX -= speed;
+                    case "right"-> worldX += speed;
                 }
             }
+
+
 
             spriteCounter++;
             if(spriteCounter > 12){
-                if(spriteNum == 1){
-                    spriteNum = 2;
-                }else if(spriteNum == 2){
-                    spriteNum = 1;
+                frameIndex++;
+                if(frameIndex >= frames[directionNum].length){
+                    frameIndex = 0;
                 }
                 spriteCounter = 0;
             }
-
         }
-
+        else {
+            frameIndex = 0;
+        }
+        //<--------
+        if(currentHP <= 0){
+            currentHP = 0;
+            gp.gameState = GamePanel.DEATH_STATE;
+        }
+        //<--------
 
     }
+
+
+
     public void draw(Graphics2D g2){
-//        g2.setColor(Color.white);
-//        g2.fillRect(x,y,gp.tileSize,gp.tileSize);
-
-        BufferedImage image = null;
-
-        switch(direction){
-            case "up":
-            if(spriteNum == 1){
-                image = up1;
-            }
-            if(spriteNum == 2){
-                image = up2;
-            }
-            if(spriteNum == 3){
-                image = up3;
-            }
-            if(spriteNum == 4){
-                image = up4;
-            }
-            break;
-
-
-
-            case "down":
-            if(spriteNum == 1){
-                image = down1;
-            }
-            if(spriteNum == 2){
-                image = down2;
-            }
-            if(spriteNum == 3){
-                image = down3;
-            }
-            if(spriteNum == 4){
-                image = down4;
-            }
-            break;
-
-
-            case "left":
-            if(spriteNum == 1){
-                image = left1;
-            }
-            if(spriteNum == 2){
-                image = left2;
-            }
-            if(spriteNum == 3){
-                image = left3;
-            }
-            if(spriteNum == 4){
-                image = left4;
-            }
-            break;
-
-
-
-            case "right":
-            if(spriteNum == 1){
-                image = right1;
-            }
-            if(spriteNum == 2){
-                image = right2;
-            }
-            if(spriteNum == 3){
-                image = right3;
-            }
-            if(spriteNum == 4){
-                image = right4;
-            }
-            break;
-        }
-            g2.drawImage(image, screenX,screenY, gp.tileSize, gp.tileSize, null);
+        BufferedImage image = frames[directionNum][frameIndex];
+            g2.drawImage(frames[directionNum][frameIndex],screenX,screenY, null);
     }
 }
