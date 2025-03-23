@@ -1,54 +1,41 @@
 package main;
-
 import entity.Player;
 import object.SuperObject;
-import object.OBJ_Heart;
 import object.OBJ_Key;
 import object.OBJ_Portal;
 import tile.TileManager;
-
 import javax.swing.*;
 import java.awt.*;
 
 public class GamePanel extends JPanel implements Runnable {
-
     // SCREEN SETTINGS
     public final int originalTileSize = 16; // 16x16 tile
     public final int scale = 3;
     public final int tileSize = originalTileSize * scale; // 48x48 tile
-
     public final int maxScreenCol = 33;
     public final int maxScreenRow = 20;
-
-
     public final int screenWidth = tileSize * maxScreenCol;
     public final int screenHeight = tileSize * maxScreenRow;
-
     // WORLD SETTINGS
     public final int maxWorldCol = 50;
     public final int maxWorldRow = 50;
-
     //game state
     public static final int PLAY_STATE = 0;
     public static final int DEATH_STATE = 1;
     //public static final int PAUSE_STATE = 1;
     public int gameState = PLAY_STATE;
-
     // FPS
     int FPS = 60;
-
     // GAME ENTITIES
     public TileManager tileM = new TileManager(this);
     public KeyHandler keyH = new KeyHandler(this);
     public CollisionChecker cChecker = new CollisionChecker(this);
     public Player player = new Player(this, keyH);
     public SuperObject[] obj = new SuperObject[20]; // up to 20 objects
-
     // UI
     public UI ui = new UI(this);
 
     Thread gameThread;
-
 
     public GamePanel() {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
@@ -56,18 +43,14 @@ public class GamePanel extends JPanel implements Runnable {
         this.setDoubleBuffered(true);
         this.addKeyListener(keyH);
         this.setFocusable(true);
-
         setupGame();
     }
 
     public void setupGame() {
-
-
        //manipulate key and portal location
         obj[1] = new OBJ_Key(this);
         obj[1].worldX = 46 * tileSize;
         obj[1].worldY = 24 * tileSize;
-
         // Place a portal at tile (15,15)
         obj[2] = new OBJ_Portal(this);
         obj[2].worldX = 48 * tileSize;

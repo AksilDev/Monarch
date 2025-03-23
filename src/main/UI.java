@@ -66,7 +66,7 @@ public class UI {
     }
 
     public void drawDeathScreen(Graphics2D g2) {
-        // 1) Draw a semi-transparent black rectangle over the whole screen
+        // transparent rectangle in whole screen
         g2.setColor(new Color(0, 0, 0, 150)); // 150 alpha for transparency
         g2.fillRect(0, 0, gp.screenWidth, gp.screenHeight);
 

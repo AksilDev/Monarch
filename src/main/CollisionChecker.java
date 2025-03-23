@@ -1,14 +1,8 @@
 package main;
-
 import entity.Entity;
-
 public class CollisionChecker {
-
     GamePanel gp;
-
-    public CollisionChecker(GamePanel gp) {
-        this.gp = gp;
-    }
+    public CollisionChecker(GamePanel gp) {this.gp = gp;}
 
     public void checkTile(Entity entity) {
         int entityLeftWorldX = entity.worldX + entity.solidArea.x;
@@ -31,11 +25,9 @@ public class CollisionChecker {
 
         for (int col = leftCol; col <= rightCol; col++) {
             for (int row = topRow; row <= bottomRow; row++) {
-
                 if (col < 0 || col >= gp.maxWorldCol || row < 0 || row >= gp.maxWorldRow) {
                     continue;
                 }
-
                 int tileNum = gp.tileM.mapTileNum[col][row];
                 if (gp.tileM.tile[tileNum].collision) {
                     entity.collisionOn = true;

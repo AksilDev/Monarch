@@ -34,8 +34,6 @@ public class KeyHandler implements KeyListener {
         //<------
     }
 
-
-
     @Override
     public void keyReleased(KeyEvent e) {
         int code = e.getKeyCode();
@@ -53,8 +51,6 @@ public class KeyHandler implements KeyListener {
         if (code == KeyEvent.VK_A) {leftPressed = false;}
         if (code == KeyEvent.VK_D) {rightPressed = false;}
     }
-
-
 
     }
 }
