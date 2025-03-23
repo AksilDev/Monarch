@@ -32,6 +32,13 @@ public class KeyHandler implements KeyListener {
                 }
         }
         //<------
+
+        if(code == KeyEvent.VK_J) {
+            // Start the slash if not already attacking
+            if(!gp.player.attacking) {
+                gp.player.startAttack();
+            }
+        }
     }
 
     @Override

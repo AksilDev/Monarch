@@ -14,10 +14,22 @@ public class Player extends Entity{
     public int maxHP = 10;
     public int currentHP = 10;
 
+    //walking frame
     public BufferedImage[][] frames;
+
+    //attack frame
+    public boolean attacking = false;
+    public BufferedImage[][] attackframes;
+    private int attackFrameIndex = 0;
+    private int attackTimer = 0;
+    private final  int ATTACK_FRAMES_PER_DIRECTION = 8;
+
+
+    //index and direction
     private int frameIndex;
     private int directionNum;
 
+    //world building
     public final int screenX;
     public final int screenY;
     public int spriteCounter = 0;
@@ -38,6 +50,7 @@ public class Player extends Entity{
 
         setDefaultValues();
         loadSheet();
+        loadAttackSheet();
     }
     public void setDefaultValues(){
 
@@ -53,12 +66,12 @@ public class Player extends Entity{
             BufferedImage sheet = ImageIO.read(
                     getClass().getResourceAsStream("/player/orc2_full.png")
             );
-
             UtilityTool uTool = new UtilityTool();
 
             int rows = 4, cols = 8;
             int frameWidth = 64, frameHeight = 64;
 
+            //walk frames
             frames = new BufferedImage[rows][cols];
 
             for(int row = 0; row < rows; row++){
@@ -78,6 +91,39 @@ public class Player extends Entity{
             e.printStackTrace();
         }
     }
+
+    public void loadAttackSheet() {
+        try {
+            BufferedImage sheet = ImageIO.read(
+                    getClass().getResourceAsStream("/player/orc2_attack.png")
+            );
+            UtilityTool uTool = new UtilityTool();
+
+            int rows = 4, cols = 8;
+            int frameWidth = 64, frameHeight = 64;
+
+
+            attackframes = new BufferedImage[rows][cols];
+
+            for(int row = 0; row < rows; row++){
+                for(int col = 0; col < cols; col++){
+                    BufferedImage sub = sheet.getSubimage(
+                            col * frameWidth,
+                            row * frameHeight,
+                            frameWidth,
+                            frameHeight
+                    );
+                    // scale each frame to tileSize
+                    sub = uTool.scaleImage(sub, gp.tileSize * 2, gp.tileSize * 2 );
+                    attackframes[row][col] = sub;
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
     public BufferedImage setup(String imageName){
@@ -108,6 +154,20 @@ public class Player extends Entity{
 
     public void update() {
 
+        if(attacking){
+            attackTimer++;
+            if(attackTimer > 2){
+                attackFrameIndex++;
+                attackTimer = 0;
+                if(attackFrameIndex >= ATTACK_FRAMES_PER_DIRECTION){
+                    attackFrameIndex = 0;
+                    attacking = false;
+                }
+            }
+            return;
+        }
+
+
         boolean moving = false;
         if(keyH.upPressed || keyH.downPressed || keyH.leftPressed || keyH.rightPressed){moving = true;}
         if(moving){
@@ -130,9 +190,6 @@ public class Player extends Entity{
 
             collisionOn = false;
             gp.cChecker.checkTile(this);
-
-
-
             if(!collisionOn){
                 switch(direction){
                     case "up"   -> worldY -= speed;
@@ -141,7 +198,6 @@ public class Player extends Entity{
                     case "right"-> worldX += speed;
                 }
             }
-
 
 
             spriteCounter++;
@@ -156,19 +212,33 @@ public class Player extends Entity{
         else {
             frameIndex = 0;
         }
-        //<--------
+
         if(currentHP <= 0){
             currentHP = 0;
             gp.gameState = GamePanel.DEATH_STATE;
         }
-        //<--------
+
 
     }
 
+    public void startAttack(){
+        attacking = true;
+        attackFrameIndex = 0;
+        attackTimer = 0;
+    }
 
 
     public void draw(Graphics2D g2){
-        BufferedImage image = frames[directionNum][frameIndex];
-            g2.drawImage(frames[directionNum][frameIndex],screenX,screenY, null);
+        BufferedImage image;
+
+        if(attacking){
+
+            image = attackframes[directionNum][attackFrameIndex];
+        }else{
+            image = frames[directionNum][frameIndex];
+        }
+            g2.drawImage(image,screenX,screenY, null);
     }
+
+
 }
