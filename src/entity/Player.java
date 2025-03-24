@@ -34,6 +34,8 @@ public class Player extends Entity{
     public final int screenY;
     public int spriteCounter = 0;
 
+    private boolean alreadyHit = false;
+
     public Player (GamePanel gp, KeyHandler keyH){
 
         this.gp = gp;
@@ -58,6 +60,40 @@ public class Player extends Entity{
         worldY = gp.tileSize * 27;
         speed = 4;
         direction ="down";
+    }
+    private void checkHitEnemies() {
+        // 1) Build a small slash bounding box in front of the player
+        int slashX = worldX;
+        int slashY = worldY;
+        int slashW = 40;
+        int slashH = 40;
+
+        switch(direction) {
+            case "down": slashY += 40; break;
+            case "up":   slashY -= 40; break;
+            case "left": slashX -= 40; break;
+            case "right":slashX += 40; break;
+        }
+
+        Rectangle slashArea = new Rectangle(slashX, slashY, slashW, slashH);
+
+        // 2) Check all enemies in GamePanel
+        for(int i=0; i<gp.enemies.length; i++) {
+            if(gp.enemies[i] != null && gp.enemies[i].alive) {
+                // Convert the enemy’s world coords to a bounding box
+                Rectangle enemyBox = new Rectangle(
+                        gp.enemies[i].worldX + gp.enemies[i].solidArea.x,
+                        gp.enemies[i].worldY + gp.enemies[i].solidArea.y,
+                        gp.enemies[i].solidArea.width,
+                        gp.enemies[i].solidArea.height
+                );
+
+                if(slashArea.intersects(enemyBox)) {
+                    // Do damage
+                    gp.enemies[i].takeDamage(1);
+                }
+            }
+        }
     }
 
 
@@ -154,18 +190,26 @@ public class Player extends Entity{
 
     public void update() {
 
-        if(attacking){
+        if(attacking) {
             attackTimer++;
-            if(attackTimer > 2){
+            // Suppose we only check collision once at frameIndex==2
+            if(attackFrameIndex == 2 && !alreadyHit) {
+                checkHitEnemies();
+                alreadyHit = true; // a boolean that resets each time we start a slash
+            }
+
+            if(attackTimer > 2) {
                 attackFrameIndex++;
-                attackTimer = 0;
-                if(attackFrameIndex >= ATTACK_FRAMES_PER_DIRECTION){
-                    attackFrameIndex = 0;
-                    attacking = false;
+                attackTimer=0;
+                if(attackFrameIndex>=ATTACK_FRAMES_PER_DIRECTION) {
+                    attackFrameIndex=0;
+                    attacking=false;
+                    alreadyHit = false; // reset so next slash can hit again
                 }
             }
             return;
         }
+
 
 
         boolean moving = false;
