@@ -1,103 +1,66 @@
 package entity;
+
 import main.GamePanel;
 import main.KeyHandler;
 import main.UtilityTool;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-public class Player extends Entity{
+public class Player extends Entity {
+
     GamePanel gp;
     KeyHandler keyH;
 
+    // === Health ===
     public int maxHP = 10;
     public int currentHP = 10;
 
-    //walking frame
-    public BufferedImage[][] frames;
-
-    //attack frame
-    public boolean attacking = false;
-    public BufferedImage[][] attackframes;
-    private int attackFrameIndex = 0;
-    private int attackTimer = 0;
-    private final  int ATTACK_FRAMES_PER_DIRECTION = 8;
-
-
-    //index and direction
-    private int frameIndex;
-    private int directionNum;
-
-    //world building
+    // === Screen Position (fixed center) ===
     public final int screenX;
     public final int screenY;
-    public int spriteCounter = 0;
 
+    // === Movement ===
+    private int spriteCounter = 0;
+    private int frameIndex = 0;
+    private int directionNum = 0;
+
+    // === Walking Frames ===
+    public BufferedImage[][] frames;
+
+    // === Attack ===
+    public boolean attacking = false;
+    private BufferedImage[][] attackFrames;
+    private int attackFrameIndex = 0;
+    private int attackTimer = 0;
+    private final int ATTACK_FRAMES_PER_DIRECTION = 8;
     private boolean alreadyHit = false;
 
-    public Player (GamePanel gp, KeyHandler keyH){
-
+    public Player(GamePanel gp, KeyHandler keyH) {
         this.gp = gp;
         this.keyH = keyH;
 
-        screenX = gp.screenWidth/2 - (gp.tileSize/2);
-        screenY = gp.screenHeight/2 - (gp.tileSize/2);
+        screenX = gp.screenWidth / 2 - (gp.tileSize / 2);
+        screenY = gp.screenHeight / 2 - (gp.tileSize / 2);
 
-        solidArea = new Rectangle();
-        solidArea.x = 8;
-        solidArea.y = 16;
-        solidArea.width = 60;
-        solidArea.height = 60;
+        solidArea = new Rectangle(8, 16, 60, 60);
 
         setDefaultValues();
-        loadSheet();
-        loadAttackSheet();
+        loadWalkFrames();
+        loadAttackFrames();
     }
-    public void setDefaultValues(){
 
+    public void setDefaultValues() {
         worldX = gp.tileSize * 2;
         worldY = gp.tileSize * 27;
         speed = 4;
-        direction ="down";
-    }
-    private void checkHitEnemies() {
-        // 1) Build a small slash bounding box in front of the player
-        int slashX = worldX;
-        int slashY = worldY;
-        int slashW = 40;
-        int slashH = 40;
-
-        switch(direction) {
-            case "down": slashY += 40; break;
-            case "up":   slashY -= 40; break;
-            case "left": slashX -= 40; break;
-            case "right":slashX += 40; break;
-        }
-
-        Rectangle slashArea = new Rectangle(slashX, slashY, slashW, slashH);
-
-        // 2) Check all enemies in GamePanel
-        for(int i=0; i<gp.enemies.length; i++) {
-            if(gp.enemies[i] != null && gp.enemies[i].alive) {
-                // Convert the enemy’s world coords to a bounding box
-                Rectangle enemyBox = new Rectangle(
-                        gp.enemies[i].worldX + gp.enemies[i].solidArea.x,
-                        gp.enemies[i].worldY + gp.enemies[i].solidArea.y,
-                        gp.enemies[i].solidArea.width,
-                        gp.enemies[i].solidArea.height
-                );
-
-                if(slashArea.intersects(enemyBox)) {
-                    // Do damage
-                    gp.enemies[i].takeDamage(1);
-                }
-            }
-        }
+        direction = "down";
+        currentHP = maxHP;
     }
 
-
-    public void loadSheet() {
+    private void loadWalkFrames() {
         try {
             BufferedImage sheet = ImageIO.read(
                     getClass().getResourceAsStream("/player/orc2_full.png")
@@ -107,28 +70,23 @@ public class Player extends Entity{
             int rows = 4, cols = 8;
             int frameWidth = 64, frameHeight = 64;
 
-            //walk frames
             frames = new BufferedImage[rows][cols];
 
-            for(int row = 0; row < rows; row++){
-                for(int col = 0; col < cols; col++){
+            for (int row = 0; row < rows; row++) {
+                for (int col = 0; col < cols; col++) {
                     BufferedImage sub = sheet.getSubimage(
-                            col * frameWidth,
-                            row * frameHeight,
-                            frameWidth,
-                            frameHeight
+                            col * frameWidth, row * frameHeight,
+                            frameWidth, frameHeight
                     );
-                    // scale each frame to tileSize
-                    frames[row][col] = uTool.scaleImage(sub, gp.tileSize * 2, gp.tileSize * 2 );
+                    frames[row][col] = uTool.scaleImage(sub, gp.tileSize * 2, gp.tileSize * 2);
                 }
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void loadAttackSheet() {
+    private void loadAttackFrames() {
         try {
             BufferedImage sheet = ImageIO.read(
                     getClass().getResourceAsStream("/player/orc2_attack.png")
@@ -138,20 +96,15 @@ public class Player extends Entity{
             int rows = 4, cols = 8;
             int frameWidth = 64, frameHeight = 64;
 
+            attackFrames = new BufferedImage[rows][cols];
 
-            attackframes = new BufferedImage[rows][cols];
-
-            for(int row = 0; row < rows; row++){
-                for(int col = 0; col < cols; col++){
+            for (int row = 0; row < rows; row++) {
+                for (int col = 0; col < cols; col++) {
                     BufferedImage sub = sheet.getSubimage(
-                            col * frameWidth,
-                            row * frameHeight,
-                            frameWidth,
-                            frameHeight
+                            col * frameWidth, row * frameHeight,
+                            frameWidth, frameHeight
                     );
-                    // scale each frame to tileSize
-                    sub = uTool.scaleImage(sub, gp.tileSize * 2, gp.tileSize * 2 );
-                    attackframes[row][col] = sub;
+                    attackFrames[row][col] = uTool.scaleImage(sub, gp.tileSize * 2, gp.tileSize * 2);
                 }
             }
 
@@ -160,129 +113,139 @@ public class Player extends Entity{
         }
     }
 
-
-
-    public BufferedImage setup(String imageName){
-        UtilityTool uTool = new UtilityTool();
-        BufferedImage image = null;
-
-        try{
-            image = ImageIO.read(getClass().getResourceAsStream("/player/"+ imageName +".png"));
-            image = uTool.scaleImage(image, gp.tileSize, gp.tileSize);
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-        return image;
-    }
-
-    public void takeDamage(int damage) {
-        currentHP -= damage;
-        if(currentHP < 0) {
-            currentHP = 0;
-        }
-
-        if(currentHP == 0){
-            gp.gameState = GamePanel.DEATH_STATE;
-        }
-
-    }
-
-
-    public void update() {
-
-        if(attacking) {
-            attackTimer++;
-            // Suppose we only check collision once at frameIndex==2
-            if(attackFrameIndex == 2 && !alreadyHit) {
-                checkHitEnemies();
-                alreadyHit = true; // a boolean that resets each time we start a slash
-            }
-
-            if(attackTimer > 2) {
-                attackFrameIndex++;
-                attackTimer=0;
-                if(attackFrameIndex>=ATTACK_FRAMES_PER_DIRECTION) {
-                    attackFrameIndex=0;
-                    attacking=false;
-                    alreadyHit = false; // reset so next slash can hit again
-                }
-            }
-            return;
-        }
-
-
-
-        boolean moving = false;
-        if(keyH.upPressed || keyH.downPressed || keyH.leftPressed || keyH.rightPressed){moving = true;}
-        if(moving){
-            if(keyH.upPressed){
-                direction = "up";
-                directionNum = 1;
-            }
-            else if(keyH.downPressed){
-                direction = "down";
-                directionNum = 0;
-            }
-            else if(keyH.leftPressed){
-                direction = "left";
-                directionNum = 2;
-            }
-            else if(keyH.rightPressed){
-                direction = "right";
-                directionNum = 3;
-            }
-
-            collisionOn = false;
-            gp.cChecker.checkTile(this);
-            if(!collisionOn){
-                switch(direction){
-                    case "up"   -> worldY -= speed;
-                    case "down" -> worldY += speed;
-                    case "left" -> worldX -= speed;
-                    case "right"-> worldX += speed;
-                }
-            }
-
-
-            spriteCounter++;
-            if(spriteCounter > 12){
-                frameIndex++;
-                if(frameIndex >= frames[directionNum].length){
-                    frameIndex = 0;
-                }
-                spriteCounter = 0;
-            }
-        }
-        else {
-            frameIndex = 0;
-        }
-
-        if(currentHP <= 0){
-            currentHP = 0;
-            gp.gameState = GamePanel.DEATH_STATE;
-        }
-
-
-    }
-
-    public void startAttack(){
+    public void startAttack() {
         attacking = true;
         attackFrameIndex = 0;
         attackTimer = 0;
     }
 
-
-    public void draw(Graphics2D g2){
-        BufferedImage image;
-
-        if(attacking){
-
-            image = attackframes[directionNum][attackFrameIndex];
-        }else{
-            image = frames[directionNum][frameIndex];
+    public void takeDamage(int damage) {
+        currentHP -= damage;
+        if (currentHP <= 0) {
+            currentHP = 0;
+            gp.gameState = GamePanel.DEATH_STATE;
         }
-            g2.drawImage(image,screenX,screenY, null);
     }
 
+//    @Override
+    public void update() {
+        if (attacking) {
+            handleAttackFrames();
+            return;
+        }
 
+        boolean moving = keyH.upPressed || keyH.downPressed || keyH.leftPressed || keyH.rightPressed;
+
+        if (moving) {
+            handleMovement();
+        } else {
+            frameIndex = 0;
+        }
+
+        if (currentHP <= 0) {
+            currentHP = 0;
+            gp.gameState = GamePanel.DEATH_STATE;
+        }
+    }
+
+    private void handleMovement() {
+        // Direction & animation frame
+        if (keyH.upPressed) {
+            direction = "up";
+            directionNum = 1;
+        } else if (keyH.downPressed) {
+            direction = "down";
+            directionNum = 0;
+        } else if (keyH.leftPressed) {
+            direction = "left";
+            directionNum = 2;
+        } else if (keyH.rightPressed) {
+            direction = "right";
+            directionNum = 3;
+        }
+
+        // Collision check
+        collisionOn = false;
+        gp.cChecker.checkTile(this);
+        if (!collisionOn) {
+            switch (direction) {
+                case "up" -> worldY -= speed;
+                case "down" -> worldY += speed;
+                case "left" -> worldX -= speed;
+                case "right" -> worldX += speed;
+            }
+        }
+
+        // Animation
+        spriteCounter++;
+        if (spriteCounter > 12) {
+            frameIndex = (frameIndex + 1) % frames[directionNum].length;
+            spriteCounter = 0;
+        }
+    }
+
+    private void handleAttackFrames() {
+        attackTimer++;
+
+        if (attackFrameIndex == 2 && !alreadyHit) {
+            checkHitEnemies();
+            alreadyHit = true;
+        }
+
+        if (attackTimer > 2) {
+            attackFrameIndex++;
+            attackTimer = 0;
+
+            if (attackFrameIndex >= ATTACK_FRAMES_PER_DIRECTION) {
+                attackFrameIndex = 0;
+                attacking = false;
+                alreadyHit = false;
+            }
+        }
+    }
+
+    private void checkHitEnemies() {
+        // Create a "slash zone" in front of player
+        int slashX = worldX;
+        int slashY = worldY;
+        int slashW = 40;
+        int slashH = 40;
+
+        switch (direction) {
+            case "down" -> slashY += 40;
+            case "up" -> slashY -= 40;
+            case "left" -> slashX -= 40;
+            case "right" -> slashX += 40;
+        }
+
+        Rectangle slashArea = new Rectangle(slashX, slashY, slashW, slashH);
+
+        for (var enemy : gp.enemies) {
+            if (enemy != null && enemy.alive) {
+                Rectangle enemyBox = new Rectangle(
+                        enemy.worldX + enemy.solidArea.x,
+                        enemy.worldY + enemy.solidArea.y,
+                        enemy.solidArea.width,
+                        enemy.solidArea.height
+                );
+
+                if (slashArea.intersects(enemyBox)) {
+                    enemy.takeDamage(1);
+                }
+            }
+        }
+    }
+
+//    @Override
+    public void draw(Graphics2D g2) {
+        BufferedImage image;
+
+        if (attacking) {
+            image = attackFrames[directionNum][attackFrameIndex];
+        } else {
+            image = frames[directionNum][frameIndex];
+        }
+
+        g2.drawImage(image, screenX, screenY, null);
+    }
 }
