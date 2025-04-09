@@ -17,30 +17,43 @@ public class TileManager {
 
     public TileManager(GamePanel gp) {
         this.gp = gp;
-        tile = new Tile[10]; // based on 1.png to 10.png
+        tile = new Tile[30]; // Increase if needed
         mapTileNum = new int[gp.maxWorldCol][gp.maxWorldRow];
 
         loadTileImages();
-        loadMap("/maps/world01.txt");
     }
 
     public void loadTileImages() {
-        setup(0, "1", false);
-        setup(1, "10", true);
-        setup(2, "2", true);
-        setup(3, "3", false);
-        setup(4, "4", true);
-        setup(5, "5", true);
-        setup(6, "6", false);
-        setup(7, "7", false);
-        setup(8, "8", false);
-        setup(9, "9", false);
+        // === World 1 Tiles (0–9) ===
+        setup(0, "tiles/1", false);
+        setup(1, "tiles/10", true);
+        setup(2, "tiles/2", true);
+        setup(3, "tiles/3", false);
+        setup(4, "tiles/4", true);
+        setup(5, "tiles/5", true);
+        setup(6, "tiles/6", false);
+        setup(7, "tiles/7", false);
+        setup(8, "tiles/8", false);
+        setup(9, "tiles/9", false);
+
+        // === World 2 Tiles (10–20) ===
+        setup(10, "tiles2/Floor1", false);
+        setup(11, "tiles2/Floor2", false);
+        setup(12, "tiles2/grass1", true);
+        setup(13, "tiles2/grass2", true);
+        setup(14, "tiles2/wall1", false);
+        setup(15, "tiles2/wall2", true);
+        setup(16, "tiles2/cliff1", true);
+        setup(17, "tiles2/cliff2", true);
+        setup(18, "tiles2/Floor3", false);
+        setup(19, "tiles2/dirt", false);
+        setup(20, "tiles2/edge1", false);
     }
 
-    public void setup(int index, String imageName, boolean collision) {
+    public void setup(int index, String imagePath, boolean collision) {
         try {
             tile[index] = new Tile();
-            tile[index].image = ImageIO.read(getClass().getResourceAsStream("/tiles/" + imageName + ".png"));
+            tile[index].image = ImageIO.read(getClass().getResourceAsStream("/" + imagePath + ".png"));
             tile[index].image = new UtilityTool().scaleImage(tile[index].image, gp.tileSize, gp.tileSize);
             tile[index].collision = collision;
         } catch (Exception e) {

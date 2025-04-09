@@ -125,9 +125,20 @@ public class Player extends Entity {
             currentHP = 0;
             gp.gameState = GamePanel.DEATH_STATE;
         }
+
+        // Knockback effect
+        int knockbackDistance = gp.tileSize / 2;
+
+        switch (direction) {
+            case "up" -> worldY += knockbackDistance;
+            case "down" -> worldY -= knockbackDistance;
+            case "left" -> worldX += knockbackDistance;
+            case "right" -> worldX -= knockbackDistance;
+        }
     }
 
-//    @Override
+
+    //    @Override
     public void update() {
         if (attacking) {
             handleAttackFrames();
@@ -239,6 +250,11 @@ public class Player extends Entity {
 //    @Override
     public void draw(Graphics2D g2) {
         BufferedImage image;
+
+        // Debug: draw player hitbox
+        g2.setColor(new Color(0, 255, 0, 100)); // semi-transparent green
+        g2.drawRect(screenX + solidArea.x, screenY + solidArea.y, solidArea.width, solidArea.height);
+
 
         if (attacking) {
             image = attackFrames[directionNum][attackFrameIndex];

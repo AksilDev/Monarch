@@ -5,7 +5,8 @@ import entity.Enemy;
 import entity.Goblin;
 import object.*;
 import tile.TileManager;
-
+import entity.General;
+import entity.EnemySpawner;
 import javax.swing.*;
 import java.awt.*;
 
@@ -23,7 +24,9 @@ public class GamePanel extends JPanel implements Runnable {
     // ========== WORLD SETTINGS ==========
     public final int maxWorldCol = 50;
     public final int maxWorldRow = 50;
-    public int currentWorld = 1;
+    public int currentWorld = 2;
+    public boolean DEBUG_MODE = true;
+
 
     // ========== GAME STATES ==========
     public static final int PLAY_STATE = 0;
@@ -39,6 +42,7 @@ public class GamePanel extends JPanel implements Runnable {
     public Player player = new Player(this, keyH);
     public Enemy[] enemies = new Enemy[10];
     public SuperObject[] obj = new SuperObject[20];
+    public EnemySpawner enemySpawner = new EnemySpawner(this);
 
     // ========== UI & SYSTEM ==========
     public UI ui = new UI(this);
@@ -55,7 +59,9 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void setupWorldContent() {
+        System.out.println("🗺 Loading World: " + currentWorld);
         tileM.loadMap("/maps/world0" + currentWorld + ".txt");
+        enemySpawner.spawnWorld(currentWorld);
 
         // Reset player and flags
         player.setDefaultValues();
@@ -77,7 +83,22 @@ public class GamePanel extends JPanel implements Runnable {
 
             enemies[0] = new Goblin(this, 19 * tileSize, 10 * tileSize);
             enemies[1] = new Goblin(this, 46 * tileSize, 25 * tileSize);
+        }else if (currentWorld == 2) {
+            tileM.loadMap("/maps/world02.txt"); // Make sure path is correct
+
+            obj[1] = new OBJ_Key(this);
+            obj[1].worldX = 46 * tileSize;
+            obj[1].worldY = 24 * tileSize;
+
+            obj[2] = new OBJ_Portal(this);
+            obj[2].worldX = 47 * tileSize;
+            obj[2].worldY = 24 * tileSize;
+
+            enemies[0] = new Goblin(this, 11 * tileSize, 22 * tileSize);
+            enemies[1] = new Goblin(this, 20 * tileSize, 20 * tileSize);
+             enemies[2] = new General(this, 45 * tileSize, 23 * tileSize);
         }
+
     }
 
     public void startGameThread() {
