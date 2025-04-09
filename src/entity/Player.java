@@ -2,41 +2,46 @@ package entity;
 
 import main.GamePanel;
 import main.KeyHandler;
-import main.UtilityTool;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 
 public class Player extends Entity {
 
-    GamePanel gp;
-    KeyHandler keyH;
+    public GamePanel gp;
+    public KeyHandler keyH;
 
-    // === Health ===
     public int maxHP = 10;
     public int currentHP = 10;
 
-    // === Screen Position (fixed center) ===
     public final int screenX;
     public final int screenY;
 
-    // === Movement ===
-    private int spriteCounter = 0;
-    private int frameIndex = 0;
-    private int directionNum = 0;
-
-    // === Walking Frames ===
-    public BufferedImage[][] frames;
-
-    // === Attack ===
     public boolean attacking = false;
-    private BufferedImage[][] attackFrames;
-    private int attackFrameIndex = 0;
-    private int attackTimer = 0;
-    private final int ATTACK_FRAMES_PER_DIRECTION = 8;
-    private boolean alreadyHit = false;
+    public boolean usingSpecial = false;
+    public boolean usingUltimate = false;
+
+    public int attackFrameIndex = 0;
+    public int attackTimer = 0;
+    public final int ATTACK_FRAMES_PER_DIRECTION = 8;
+    public boolean alreadyHit = false;
+
+    public int frameIndex = 0;
+    public int directionNum = 0;
+    private int spriteCounter = 0;
+
+    public long specialCooldownStart = 0;
+    public long ultimateCooldownStart = 0;
+    private final int SPECIAL_COOLDOWN_MS = 4000;
+    private final int ULTIMATE_COOLDOWN_MS = 8000;
+
+    public BufferedImage[][] frames;
+    public BufferedImage[][] attackFrames;
+    public BufferedImage[][] specialFrames;
+    public BufferedImage[][] ultFrames;
+
+    private PlayerAttack attackHandler;
+    private PlayerAnimation animator;
 
     public Player(GamePanel gp, KeyHandler keyH) {
         this.gp = gp;
@@ -48,8 +53,11 @@ public class Player extends Entity {
         solidArea = new Rectangle(8, 16, 60, 60);
 
         setDefaultValues();
-        loadWalkFrames();
-        loadAttackFrames();
+
+        animator = new PlayerAnimation(this);
+        animator.loadAllFrames();
+
+        attackHandler = new PlayerAttack(this);
     }
 
     public void setDefaultValues() {
@@ -60,90 +68,8 @@ public class Player extends Entity {
         currentHP = maxHP;
     }
 
-    private void loadWalkFrames() {
-        try {
-            BufferedImage sheet = ImageIO.read(
-                    getClass().getResourceAsStream("/player/orc2_full.png")
-            );
-            UtilityTool uTool = new UtilityTool();
-
-            int rows = 4, cols = 8;
-            int frameWidth = 64, frameHeight = 64;
-
-            frames = new BufferedImage[rows][cols];
-
-            for (int row = 0; row < rows; row++) {
-                for (int col = 0; col < cols; col++) {
-                    BufferedImage sub = sheet.getSubimage(
-                            col * frameWidth, row * frameHeight,
-                            frameWidth, frameHeight
-                    );
-                    frames[row][col] = uTool.scaleImage(sub, gp.tileSize * 2, gp.tileSize * 2);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void loadAttackFrames() {
-        try {
-            BufferedImage sheet = ImageIO.read(
-                    getClass().getResourceAsStream("/player/orc2_attack.png")
-            );
-            UtilityTool uTool = new UtilityTool();
-
-            int rows = 4, cols = 8;
-            int frameWidth = 64, frameHeight = 64;
-
-            attackFrames = new BufferedImage[rows][cols];
-
-            for (int row = 0; row < rows; row++) {
-                for (int col = 0; col < cols; col++) {
-                    BufferedImage sub = sheet.getSubimage(
-                            col * frameWidth, row * frameHeight,
-                            frameWidth, frameHeight
-                    );
-                    attackFrames[row][col] = uTool.scaleImage(sub, gp.tileSize * 2, gp.tileSize * 2);
-                }
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void startAttack() {
-        attacking = true;
-        attackFrameIndex = 0;
-        attackTimer = 0;
-    }
-
-    public void takeDamage(int damage) {
-        currentHP -= damage;
-        if (currentHP <= 0) {
-            currentHP = 0;
-            gp.gameState = GamePanel.DEATH_STATE;
-        }
-
-        // Knockback effect
-        int knockbackDistance = gp.tileSize / 2;
-
-        switch (direction) {
-            case "up" -> worldY += knockbackDistance;
-            case "down" -> worldY -= knockbackDistance;
-            case "left" -> worldX += knockbackDistance;
-            case "right" -> worldX -= knockbackDistance;
-        }
-    }
-
-
-    //    @Override
     public void update() {
-        if (attacking) {
-            handleAttackFrames();
-            return;
-        }
+        if (attackHandler.updateAttack()) return;
 
         boolean moving = keyH.upPressed || keyH.downPressed || keyH.leftPressed || keyH.rightPressed;
 
@@ -152,15 +78,9 @@ public class Player extends Entity {
         } else {
             frameIndex = 0;
         }
-
-        if (currentHP <= 0) {
-            currentHP = 0;
-            gp.gameState = GamePanel.DEATH_STATE;
-        }
     }
 
     private void handleMovement() {
-        // Direction & animation frame
         if (keyH.upPressed) {
             direction = "up";
             directionNum = 1;
@@ -175,7 +95,6 @@ public class Player extends Entity {
             directionNum = 3;
         }
 
-        // Collision check
         collisionOn = false;
         gp.cChecker.checkTile(this);
         if (!collisionOn) {
@@ -187,7 +106,6 @@ public class Player extends Entity {
             }
         }
 
-        // Animation
         spriteCounter++;
         if (spriteCounter > 12) {
             frameIndex = (frameIndex + 1) % frames[directionNum].length;
@@ -195,73 +113,62 @@ public class Player extends Entity {
         }
     }
 
-    private void handleAttackFrames() {
-        attackTimer++;
-
-        if (attackFrameIndex == 2 && !alreadyHit) {
-            checkHitEnemies();
-            alreadyHit = true;
-        }
-
-        if (attackTimer > 2) {
-            attackFrameIndex++;
-            attackTimer = 0;
-
-            if (attackFrameIndex >= ATTACK_FRAMES_PER_DIRECTION) {
-                attackFrameIndex = 0;
-                attacking = false;
-                alreadyHit = false;
-            }
-        }
-    }
-
-    private void checkHitEnemies() {
-        // Create a "slash zone" in front of player
-        int slashX = worldX;
-        int slashY = worldY;
-        int slashW = 40;
-        int slashH = 40;
-
-        switch (direction) {
-            case "down" -> slashY += 40;
-            case "up" -> slashY -= 40;
-            case "left" -> slashX -= 40;
-            case "right" -> slashX += 40;
-        }
-
-        Rectangle slashArea = new Rectangle(slashX, slashY, slashW, slashH);
-
-        for (var enemy : gp.enemies) {
-            if (enemy != null && enemy.alive) {
-                Rectangle enemyBox = new Rectangle(
-                        enemy.worldX + enemy.solidArea.x,
-                        enemy.worldY + enemy.solidArea.y,
-                        enemy.solidArea.width,
-                        enemy.solidArea.height
-                );
-
-                if (slashArea.intersects(enemyBox)) {
-                    enemy.takeDamage(1);
-                }
-            }
-        }
-    }
-
-//    @Override
     public void draw(Graphics2D g2) {
-        BufferedImage image;
+        BufferedImage image = animator.getCurrentFrame();
+        g2.drawImage(image, screenX, screenY, null);
+    }
 
-        // Debug: draw player hitbox
-        g2.setColor(new Color(0, 255, 0, 100)); // semi-transparent green
-        g2.drawRect(screenX + solidArea.x, screenY + solidArea.y, solidArea.width, solidArea.height);
-
-
-        if (attacking) {
-            image = attackFrames[directionNum][attackFrameIndex];
-        } else {
-            image = frames[directionNum][frameIndex];
+    public void takeDamage(int damage) {
+        currentHP -= damage;
+        if (currentHP <= 0) {
+            currentHP = 0;
+            gp.gameState = GamePanel.DEATH_STATE;
         }
 
-        g2.drawImage(image, screenX, screenY, null);
+        int knockbackDistance = gp.tileSize / 2;
+        switch (direction) {
+            case "up" -> worldY += knockbackDistance;
+            case "down" -> worldY -= knockbackDistance;
+            case "left" -> worldX += knockbackDistance;
+            case "right" -> worldX -= knockbackDistance;
+        }
+    }
+
+    public void startAttack() {
+        attacking = true;
+        attackFrameIndex = 0;
+        attackTimer = 0;
+    }
+
+    public void startSpecial() {
+        if (!usingSpecial && isSpecialReady()) {
+            usingSpecial = true;
+            specialCooldownStart = System.currentTimeMillis();
+            attackFrameIndex = 0;
+            attackTimer = 0;
+        }
+    }
+
+    public void startUltimate() {
+        if (!usingUltimate && isUltimateReady()) {
+            usingUltimate = true;
+            ultimateCooldownStart = System.currentTimeMillis();
+            attackFrameIndex = 0;
+            attackTimer = 0;
+        }
+    }
+
+    public boolean isSpecialReady() {
+        return System.currentTimeMillis() - specialCooldownStart >= SPECIAL_COOLDOWN_MS;
+    }
+
+    public boolean isUltimateReady() {
+        return System.currentTimeMillis() - ultimateCooldownStart >= ULTIMATE_COOLDOWN_MS;
+    }
+
+    public float cooldownRemaining(long startTime, int cooldownMs) {
+        long now = System.currentTimeMillis();
+        long timePassed = now - startTime;
+        return Math.max(0, (cooldownMs - timePassed) / 1000f);
     }
 }

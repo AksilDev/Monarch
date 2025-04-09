@@ -17,23 +17,21 @@ public class UI {
         loadHUDGraphics();
     }
 
-    // === Load heart images from /objects ===
     public void loadHUDGraphics() {
         try {
-            heart_full  = ImageIO.read(getClass().getResourceAsStream("/objects/full.png"));
-            heart_half  = ImageIO.read(getClass().getResourceAsStream("/objects/half.png"));
+            heart_full = ImageIO.read(getClass().getResourceAsStream("/objects/full.png"));
+            heart_half = ImageIO.read(getClass().getResourceAsStream("/objects/half.png"));
             heart_blank = ImageIO.read(getClass().getResourceAsStream("/objects/blank.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    // === Called every frame in PLAY_STATE and WIN_STATE ===
     public void draw(Graphics2D g2) {
         drawPlayerLife(g2);
+        if (gp.gameState == GamePanel.PLAY_STATE) drawSkillCooldowns(g2);
     }
 
-    // === Draws hearts on top-left of screen ===
     private void drawPlayerLife(Graphics2D g2) {
         int x = 20;
         int y = 20;
@@ -53,17 +51,14 @@ public class UI {
             } else {
                 g2.drawImage(heart_blank, x, y, null);
             }
-            x += 40; // space between hearts
+            x += 40;
         }
     }
 
-    // === Draws "YOU DIED" overlay in DEATH_STATE ===
     public void drawDeathScreen(Graphics2D g2) {
-        // Transparent black overlay
         g2.setColor(new Color(0, 0, 0, 150));
         g2.fillRect(0, 0, gp.screenWidth, gp.screenHeight);
 
-        // "YOU DIED" text
         g2.setFont(g2.getFont().deriveFont(Font.BOLD, 60F));
         g2.setColor(Color.RED);
         String text = "YOU DIED";
@@ -73,5 +68,23 @@ public class UI {
         int y = gp.screenHeight / 2;
 
         g2.drawString(text, x, y);
+    }
+
+    public void drawSkillCooldowns(Graphics2D g2) {
+        g2.setFont(new Font("Arial", Font.PLAIN, 20));
+        g2.setColor(Color.WHITE);
+        int x = 20;
+        int y = gp.screenHeight - 40;
+
+        float specialCD = gp.player.cooldownRemaining(gp.player.specialCooldownStart, 4000);
+        float ultCD = gp.player.cooldownRemaining(gp.player.ultimateCooldownStart, 8000);
+
+        String j = "[J] Basic";
+        String k = "[K] Special: " + (specialCD <= 0 ? "Ready" : String.format("%.1fs", specialCD));
+        String l = "[L] Ult: " + (ultCD <= 0 ? "Ready" : String.format("%.1fs", ultCD));
+
+        g2.drawString(j, x, y);
+        g2.drawString(k, x + 140, y);
+        g2.drawString(l, x + 360, y);
     }
 }

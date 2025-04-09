@@ -87,16 +87,16 @@ public class GamePanel extends JPanel implements Runnable {
             tileM.loadMap("/maps/world02.txt"); // Make sure path is correct
 
             obj[1] = new OBJ_Key(this);
-            obj[1].worldX = 46 * tileSize;
+            obj[1].worldX = 47 * tileSize;
             obj[1].worldY = 24 * tileSize;
 
             obj[2] = new OBJ_Portal(this);
-            obj[2].worldX = 47 * tileSize;
+            obj[2].worldX = 49 * tileSize;
             obj[2].worldY = 24 * tileSize;
 
             enemies[0] = new Goblin(this, 11 * tileSize, 22 * tileSize);
             enemies[1] = new Goblin(this, 20 * tileSize, 20 * tileSize);
-             enemies[2] = new General(this, 45 * tileSize, 23 * tileSize);
+             enemies[2] = new General(this, 47 * tileSize, 23 * tileSize);
         }
 
     }

@@ -38,7 +38,16 @@ public class KeyHandler implements KeyListener {
             if(!gp.player.attacking) {
                 gp.player.startAttack();
             }
+        }if(code == KeyEvent.VK_K && !gp.player.usingSpecial && !gp.player.attacking) {
+            gp.player.startSpecial();
         }
+
+        if(code == KeyEvent.VK_L && !gp.player.usingUltimate && !gp.player.attacking) {
+            gp.player.startUltimate();
+        }
+
+
+
     }
 
     @Override
