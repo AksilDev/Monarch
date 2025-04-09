@@ -137,6 +137,7 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+
     public boolean areAllEnemiesDead() {
         for (Enemy e : enemies) if (e != null && e.alive) return false;
         return true;

@@ -27,6 +27,7 @@ public class Boss extends Enemy {
         deathFrames = loadSpriteSheet("/enemies/Demon_death.png", gp.tileSize * 2 + 12, 13, 4);
     }
 
+
     @Override
     protected void loadSprites(String walkPath, String attackPath) {
         walkFrames = loadSpriteSheet(walkPath, gp.tileSize * 2 + 12, 6, 4);

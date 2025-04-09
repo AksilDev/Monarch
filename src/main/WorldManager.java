@@ -52,6 +52,7 @@ public class WorldManager {
             gp.enemies[1] = new Goblin(gp, 20 * gp.tileSize, 20 * gp.tileSize);
             gp.enemies[2] = new General(gp, 47 * gp.tileSize, 23 * gp.tileSize);
 
+
         } else if (gp.currentWorld == 3) {
             gp.obj[1] = new OBJ_Key(gp);
             gp.obj[1].worldX = 40 * gp.tileSize;

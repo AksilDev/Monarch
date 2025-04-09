@@ -32,6 +32,7 @@ public class Goblin extends Enemy {
         attackFrames = loadSpriteSheet(attackPath, gp.tileSize * 2, 5, 4); // 4x4 attack
     }
 
+
     protected BufferedImage[][] loadSpriteSheet(String path, int scale, int cols, int rows) {
         try {
             BufferedImage sheet = ImageIO.read(getClass().getResourceAsStream(path));

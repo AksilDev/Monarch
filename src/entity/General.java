@@ -20,6 +20,7 @@ public class General extends Enemy {
         attackDamage = 4;
         speed = 1;
 
+
         direction = "down";
         directionNum = 0;
 

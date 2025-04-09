@@ -41,6 +41,7 @@ public class PlayerAnimation {
         }
     }
 
+
     public BufferedImage getCurrentFrame() {
         if (player.attacking) {
             return player.attackFrames[player.directionNum][player.attackFrameIndex];

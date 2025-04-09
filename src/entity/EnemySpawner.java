@@ -20,6 +20,7 @@ public class EnemySpawner {
         }
     }
 
+
     private void spawnWorld1() {
         gp.enemies[0] = new Goblin(gp, 19 * gp.tileSize, 10 * gp.tileSize);
         gp.enemies[1] = new Goblin(gp, 46 * gp.tileSize, 25 * gp.tileSize);
