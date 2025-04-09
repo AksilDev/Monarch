@@ -16,7 +16,7 @@ public class EnemySpawner {
         switch (world) {
             case 1 -> spawnWorld1();
             case 2 -> spawnWorld2();
-            case 3 -> spawnWorld3(); // Future boss world
+            case 3 -> spawnWorld3();
         }
     }
 
@@ -32,6 +32,9 @@ public class EnemySpawner {
     }
 
     private void spawnWorld3() {
-        // gp.enemies[0] = new Boss(gp, ...); // Future use
+        gp.enemies[0] = new Goblin(gp, 15 * gp.tileSize, 15 * gp.tileSize);
+        gp.enemies[1] = new Goblin(gp, 25 * gp.tileSize, 25 * gp.tileSize);
+        gp.enemies[2] = new General(gp, 30 * gp.tileSize, 15 * gp.tileSize);
+        gp.enemies[3] = new Boss(gp, 35 * gp.tileSize, 26 * gp.tileSize);
     }
 }

@@ -17,7 +17,7 @@ public class TileManager {
 
     public TileManager(GamePanel gp) {
         this.gp = gp;
-        tile = new Tile[30]; // Increase if needed
+        tile = new Tile[100]; // Increase if needed
         mapTileNum = new int[gp.maxWorldCol][gp.maxWorldRow];
 
         loadTileImages();
@@ -48,10 +48,37 @@ public class TileManager {
         setup(18, "tiles2/Floor3", false);
         setup(19, "tiles2/dirt", false);
         setup(20, "tiles2/edge1", false);
+
+
+
+        setup(21, "tiles3/floor1(21)", false);
+        setup(27, "tiles3/water6(27)", true);
+        setup(28, "tiles3/stair1(28)", true);
+        setup(29, "tiles3/stair2(29)", false);
+        setup(32, "tiles3/throne(32)", false);
+        setup(33, "tiles3/upperwall(33)", false);
+        setup(35, "tiles3/wall1(35)", true);
+        setup(36, "tiles3/wall2(36)", true);
+        setup(37, "tiles3/wall3(37)", true);
+        setup(38, "tiles3/wall4(38)", true);
+        setup(39, "tiles3/wall6(39)", true);
+        setup(43, "tiles3/wall9(43)", true);
+        setup(45, "tiles3/water(45)", true);
+        setup(49, "tiles3/water5(49)", true);
+        setup(50, "tiles3/pillar1(50)", true);
+        setup(51, "tiles3/water7(51)", true);
+        setup(63, "tiles3/carpet5(63)", true);
+        setup(65, "tiles3/corner1(65)", true);
     }
 
+
+
+
+
     public void setup(int index, String imagePath, boolean collision) {
+
         try {
+
             tile[index] = new Tile();
             tile[index].image = ImageIO.read(getClass().getResourceAsStream("/" + imagePath + ".png"));
             tile[index].image = new UtilityTool().scaleImage(tile[index].image, gp.tileSize, gp.tileSize);

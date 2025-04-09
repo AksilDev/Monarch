@@ -1,11 +1,13 @@
 package main;
 
+import entity.PlayerAttack;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-public class UI {
+public class UI{
     GamePanel gp;
 
     private BufferedImage heart_full;
@@ -76,8 +78,8 @@ public class UI {
         int x = 20;
         int y = gp.screenHeight - 40;
 
-        float specialCD = gp.player.cooldownRemaining(gp.player.specialCooldownStart, 4000);
-        float ultCD = gp.player.cooldownRemaining(gp.player.ultimateCooldownStart, 8000);
+        float specialCD = gp.player.attackHandler.cooldownRemaining(gp.player.attackHandler.specialCooldownStart, 4000);
+        float ultCD = gp.player.attackHandler.cooldownRemaining(gp.player.attackHandler.ultimateCooldownStart, 8000);
 
         String j = "[J] Basic";
         String k = "[K] Special: " + (specialCD <= 0 ? "Ready" : String.format("%.1fs", specialCD));
@@ -87,4 +89,5 @@ public class UI {
         g2.drawString(k, x + 140, y);
         g2.drawString(l, x + 360, y);
     }
+
 }

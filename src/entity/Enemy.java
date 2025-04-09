@@ -1,29 +1,26 @@
 package entity;
 
 import main.GamePanel;
+import main.UtilityTool;
+
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public abstract class Enemy extends Entity {
     protected GamePanel gp;
 
-    // === Stats ===
-    public int maxHP;
-    public int currentHP;
-    public int attack;
-    public int speed;
+    public int maxHP, currentHP, attackDamage, speed;
     public boolean alive = true;
 
-    // === Animation ===
-    protected BufferedImage[][] walkFrames;
-    protected BufferedImage[][] attackFrames;
+    protected BufferedImage[][] walkFrames, attackFrames, hurtFrames, deathFrames;
     protected int walkFrameIndex = 0, walkCounter = 0;
     protected int attackFrameIndex = 0, attackTimer = 0;
-    protected boolean isAttacking = false;
-    protected boolean alreadyHitPlayer = false;
+    protected boolean isAttacking = false, alreadyHitPlayer = false;
+    protected boolean isHurt = false, isDying = false;
+    protected int hurtTimer = 0, deathTimer = 0;
     protected int directionNum = 0;
 
-    // === AI Movement ===
     private int actionLockCounter = 0;
 
     public Enemy(GamePanel gp) {
@@ -31,16 +28,44 @@ public abstract class Enemy extends Entity {
         solidArea = new Rectangle(8, 16, 60, 60);
     }
 
-    public void takeDamage(int dmg) {
-        currentHP -= dmg;
+    public void takeDamage(int damage) {
+        currentHP -= damage;
+        triggerHurt();
         if (currentHP <= 0) {
             currentHP = 0;
             alive = false;
+            triggerDeath();
         }
+    }
+
+    public int getDamage() {
+        return attackDamage;
+    }
+
+    public void triggerHurt() {
+        isHurt = true;
+        hurtTimer = 0;
+    }
+
+    public void triggerDeath() {
+        isDying = true;
+        deathTimer = 0;
     }
 
     public void update() {
         if (!alive) return;
+
+        if (isDying) {
+            deathTimer++;
+            if (deathTimer > 60) alive = false;
+            return;
+        }
+
+        if (isHurt) {
+            hurtTimer++;
+            if (hurtTimer > 30) isHurt = false;
+            return;
+        }
 
         if (isAttacking) {
             handleAttack();
@@ -53,7 +78,6 @@ public abstract class Enemy extends Entity {
 
     protected void handleAttack() {
         attackTimer++;
-
         if (attackFrameIndex == getAttackFrameToHit() && !alreadyHitPlayer) {
             checkHitPlayer();
             alreadyHitPlayer = true;
@@ -71,11 +95,7 @@ public abstract class Enemy extends Entity {
     }
 
     protected void checkHitPlayer() {
-        int slashX = worldX;
-        int slashY = worldY;
-        int slashW = 50;
-        int slashH = 50;
-
+        int slashX = worldX, slashY = worldY, slashW = 50, slashH = 50;
         switch (direction) {
             case "down" -> slashY += solidArea.height;
             case "up"   -> slashY -= slashH;
@@ -92,19 +112,7 @@ public abstract class Enemy extends Entity {
         );
 
         if (slashArea.intersects(playerArea)) {
-            gp.player.takeDamage(attack);
-            gp.player.worldX += (direction.equals("left") ? -10 : direction.equals("right") ? 10 : 0);
-            gp.player.worldY += (direction.equals("up") ? -10 : direction.equals("down") ? 10 : 0);
-        }
-
-        if (gp.DEBUG_MODE) {
-            Graphics2D g2 = (Graphics2D) gp.getGraphics();
-            g2.setColor(Color.YELLOW);
-            g2.drawRect(
-                    slashArea.x - gp.player.worldX + gp.player.screenX,
-                    slashArea.y - gp.player.worldY + gp.player.screenY,
-                    slashArea.width, slashArea.height
-            );
+            gp.player.takeDamage(getDamage());
         }
     }
 
@@ -156,25 +164,104 @@ public abstract class Enemy extends Entity {
     public void draw(Graphics2D g2) {
         if (!alive) return;
 
-        BufferedImage image = isAttacking
-                ? attackFrames[directionNum][attackFrameIndex]
-                : walkFrames[directionNum][walkFrameIndex];
+        BufferedImage image = null;
+
+        try {
+            if (isDying && deathFrames.length > 0 && deathFrames[directionNum].length > 0) {
+                image = deathFrames[directionNum][Math.min(deathTimer / 10, deathFrames[directionNum].length - 1)];
+            } else if (isHurt && hurtFrames.length > 0 && hurtFrames[directionNum].length > 0) {
+                image = hurtFrames[directionNum][Math.min(hurtTimer / 5, hurtFrames[directionNum].length - 1)];
+            } else if (isAttacking && attackFrames.length > 0 && attackFrames[directionNum].length > 0) {
+                image = attackFrames[directionNum][attackFrameIndex % attackFrames[directionNum].length];
+            } else if (walkFrames.length > 0 && walkFrames[directionNum].length > 0) {
+                image = walkFrames[directionNum][walkFrameIndex % walkFrames[directionNum].length];
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ Failed to get enemy frame at direction=" + directionNum + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        if (image == null) return; // Skip drawing if image failed to load
 
         int screenX = worldX - gp.player.worldX + gp.player.screenX;
         int screenY = worldY - gp.player.worldY + gp.player.screenY;
 
         g2.drawImage(image, screenX, screenY, null);
 
-        int barWidth = currentHP * 10;
-        int barX = screenX + 32 - barWidth / 2;
-        int barY = screenY - 10;
-
         g2.setColor(Color.RED);
-        g2.fillRect(barX, barY, barWidth, 5);
+        g2.fillRect(screenX + 32 - currentHP * 5, screenY - 10, currentHP * 10, 5);
     }
 
-    // === Abstract methods for subclasses to override ===
-    protected abstract void loadSprites();
+
+
+
+    protected void loadHurtFrames(String path) {
+        try {
+            BufferedImage sheet = ImageIO.read(getClass().getResourceAsStream(path));
+            UtilityTool u = new UtilityTool();
+            int frameW = 64, frameH = 64;
+            hurtFrames = new BufferedImage[4][6];
+            for (int r = 0; r < 4; r++) {
+                for (int c = 0; c < 6; c++) {
+                    BufferedImage sub = sheet.getSubimage(c * frameW, r * frameH, frameW, frameH);
+                    hurtFrames[r][c] = u.scaleImage(sub, gp.tileSize * 2, gp.tileSize * 2);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected void loadDeathFrames(String path) {
+        try {
+            BufferedImage sheet = ImageIO.read(getClass().getResourceAsStream(path));
+            UtilityTool u = new UtilityTool();
+            int frameW = 64, frameH = 64;
+            deathFrames = new BufferedImage[4][6];
+            for (int r = 0; r < 4; r++) {
+                for (int c = 0; c < 6; c++) {
+                    BufferedImage sub = sheet.getSubimage(c * frameW, r * frameH, frameW, frameH);
+                    deathFrames[r][c] = u.scaleImage(sub, gp.tileSize * 2, gp.tileSize * 2);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected BufferedImage[][] loadSpriteSheet(String path, int scale, int cols, int rows) {
+        try {
+            BufferedImage sheet = ImageIO.read(getClass().getResourceAsStream(path));
+            BufferedImage[][] frames = new BufferedImage[rows][cols];
+//            if (sheet.getWidth() == 0 || sheet.getHeight() == 0) {
+//                System.err.println("❌ Warning: Loaded sprite has 0 size for " + path);
+//            }
+
+            int frameW = sheet.getWidth() / cols;
+            int frameH = sheet.getHeight() / rows;
+
+            UtilityTool u = new UtilityTool();
+
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    BufferedImage sub = sheet.getSubimage(c * frameW, r * frameH, frameW, frameH);
+                    frames[r][c] = u.scaleImage(sub, scale, scale);
+                }
+            }
+
+            return frames;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new BufferedImage[0][0]; // Return safe fallback to avoid crashing
+        }
+    }
+
+
+
+    protected abstract void loadSprites(String walkPath, String attackPath);
+
+    // === Abstracts ===
     protected abstract int getWalkFrameLength();
     protected abstract int getAttackFrameLength();
     protected abstract int getAttackFrameToHit();

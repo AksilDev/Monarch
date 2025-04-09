@@ -14,48 +14,36 @@ public class General extends Enemy {
         this.worldX = worldX;
         this.worldY = worldY;
 
+
         maxHP = 6;
         currentHP = 6;
-        attack = 4;
+        attackDamage = 4;
         speed = 1;
+
         direction = "down";
         directionNum = 0;
 
-        solidArea = new Rectangle(8, 16, 60, 60); // larger?
-        loadSprites();
+        solidArea = new Rectangle(8, 16, 60, 60);
+        loadSprites("/enemies/general_full.png", "/enemies/general_attack.png");
+        loadHurtFrames("/enemies/general_hurt.png");
+        loadDeathFrames("/enemies/general_death.png");
     }
 
+
+
+    @Override protected void loadSprites(String walkPath, String attackPath) {
+        walkFrames = loadSpriteSheet(walkPath, gp.tileSize * 2 + 12);
+        attackFrames = loadSpriteSheet(attackPath, gp.tileSize * 2 + 12);
+    }
+
+    public BufferedImage[][] loadSpriteSheet(String walkPath, int i) {
+        return new BufferedImage[0][];
+    }
     @Override
-    protected void loadSprites() {
-        try {
-            BufferedImage walkSheet = ImageIO.read(getClass().getResourceAsStream("/enemies/general_full.png"));
-            BufferedImage attackSheet = ImageIO.read(getClass().getResourceAsStream("/enemies/general_attack.png"));
-            UtilityTool uTool = new UtilityTool();
-
-            int frameSize = 64;
-            int scaled = gp.tileSize * 2 + 12;
-
-            walkFrames = new BufferedImage[4][8];
-            attackFrames = new BufferedImage[4][9];
-
-            for (int row = 0; row < 4; row++) {
-                for (int col = 0; col < 8; col++) {
-                    walkFrames[row][col] = uTool.scaleImage(
-                            walkSheet.getSubimage(col * frameSize, row * frameSize, frameSize, frameSize),
-                            scaled, scaled
-                    );
-                }
-                for (int col = 0; col < 9; col++) {
-                    attackFrames[row][col] = uTool.scaleImage(
-                            attackSheet.getSubimage(col * frameSize, row * frameSize, frameSize, frameSize),
-                            scaled, scaled
-                    );
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public int getDamage() {
+        return attackDamage;
     }
+
 
     @Override protected int getWalkFrameLength() { return 8; }
     @Override protected int getAttackFrameLength() { return 9; }
