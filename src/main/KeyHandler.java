@@ -1,42 +1,35 @@
 package main;
+
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+
 public class KeyHandler implements KeyListener {
 
-    GamePanel gp;
-
-
-    public KeyHandler(GamePanel gp){
-        this.gp = gp;
-    }
+    public final GamePanel gp;
     public boolean upPressed, downPressed, leftPressed, rightPressed;
 
-
-
-    @Override
-    public void keyTyped(KeyEvent e) {
+    public KeyHandler(GamePanel gp) {
+        this.gp = gp;
     }
+
     @Override
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode();
 
-        if(code == KeyEvent.VK_W){upPressed = true;}
-        if(code == KeyEvent.VK_S){downPressed = true;}
-        if(code == KeyEvent.VK_A){leftPressed = true; }
-        if(code == KeyEvent.VK_D){rightPressed = true;}
-        //<------
-        if(code == KeyEvent.VK_M){
-            gp.player.currentHP--;
-                if(gp.player.currentHP < 0){
-                    gp.player.currentHP = 0;
-                }
-        }
-        //<------
+        switch (code) {
+            case KeyEvent.VK_W -> upPressed = true;
+            case KeyEvent.VK_S -> downPressed = true;
+            case KeyEvent.VK_A -> leftPressed = true;
+            case KeyEvent.VK_D -> rightPressed = true;
 
-        if(code == KeyEvent.VK_J) {
-            // Start the slash if not already attacking
-            if(!gp.player.attacking) {
-                gp.player.startAttack();
+            case KeyEvent.VK_J -> gp.player.attackHandler.startAttack();
+            case KeyEvent.VK_K -> {
+                if (gp.player.attackHandler.isSpecialReady())
+                    gp.player.attackHandler.startSpecial();
+            }
+            case KeyEvent.VK_L -> {
+                if (gp.player.attackHandler.isUltimateReady())
+                    gp.player.attackHandler.startUltimate();
             }
         }if(code == KeyEvent.VK_K && !gp.player.usingSpecial && !gp.player.attacking) {
             gp.player.startSpecial();
@@ -54,19 +47,14 @@ public class KeyHandler implements KeyListener {
     public void keyReleased(KeyEvent e) {
         int code = e.getKeyCode();
 
-    if(gp.gameState == GamePanel.DEATH_STATE) {
-        if(code == KeyEvent.VK_ENTER){
-            gp.player.currentHP = gp.player.maxHP;
-            gp.player.worldX = gp.tileSize * 2;
-            gp.player.worldY = gp.tileSize * 27;
-            gp.gameState = GamePanel.PLAY_STATE;
+        switch (code) {
+            case KeyEvent.VK_W -> upPressed = false;
+            case KeyEvent.VK_S -> downPressed = false;
+            case KeyEvent.VK_A -> leftPressed = false;
+            case KeyEvent.VK_D -> rightPressed = false;
         }
-    }else{
-        if (code == KeyEvent.VK_W) {upPressed = false;}
-        if (code == KeyEvent.VK_S) {downPressed = false;}
-        if (code == KeyEvent.VK_A) {leftPressed = false;}
-        if (code == KeyEvent.VK_D) {rightPressed = false;}
     }
 
-    }
+    @Override
+    public void keyTyped(KeyEvent e) {}
 }

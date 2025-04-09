@@ -42,14 +42,17 @@ public class PlayerAnimation {
     }
 
     public BufferedImage getCurrentFrame() {
+        if (player.attacking) {
+            return player.attackFrames[player.directionNum][player.attackFrameIndex];
+        }
+        if (player.usingSpecial) {
+            return player.specialFrames[player.directionNum][player.attackFrameIndex];
+        }
         if (player.usingUltimate) {
             return player.ultFrames[player.directionNum][player.attackFrameIndex];
-        } else if (player.usingSpecial) {
-            return player.specialFrames[player.directionNum][player.attackFrameIndex];
-        } else if (player.attacking) {
-            return player.attackFrames[player.directionNum][player.attackFrameIndex];
-        } else {
-            return player.frames[player.directionNum][player.frameIndex];
         }
+        return player.frames[player.directionNum][player.frameIndex];
     }
+
 }
+

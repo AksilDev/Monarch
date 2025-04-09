@@ -4,6 +4,7 @@ import main.GamePanel;
 import main.UtilityTool;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class Goblin extends Enemy {
@@ -15,41 +16,42 @@ public class Goblin extends Enemy {
 
         maxHP = 2;
         currentHP = 2;
-        attack = 1;
+        attackDamage = 1;
         speed = 1;
+
         direction = "down";
         directionNum = 0;
 
-        loadSprites();
+        loadSprites("/enemies/gob1_walk.png", "/enemies/gob1_attack.png");
+        // No hurt or death animations for goblin
     }
 
     @Override
-    protected void loadSprites() {
+    protected void loadSprites(String walkPath, String attackPath) {
+        walkFrames = loadSpriteSheet(walkPath, gp.tileSize * 2, 6, 4);
+        attackFrames = loadSpriteSheet(attackPath, gp.tileSize * 2, 5, 4); // 4x4 attack
+    }
+
+    protected BufferedImage[][] loadSpriteSheet(String path, int scale, int cols, int rows) {
         try {
-            BufferedImage walkSheet = ImageIO.read(getClass().getResourceAsStream("/enemies/gob1_walk.png"));
-            BufferedImage attackSheet = ImageIO.read(getClass().getResourceAsStream("/enemies/gob1_attack.png"));
-            UtilityTool uTool = new UtilityTool();
+            BufferedImage sheet = ImageIO.read(getClass().getResourceAsStream(path));
+            BufferedImage[][] frames = new BufferedImage[rows][cols];
 
-            int frameWidth = 64, frameHeight = 64;
-            int scaled = gp.tileSize * 2;
+            int frameW = sheet.getWidth() / cols;
+            int frameH = sheet.getHeight() / rows;
+            UtilityTool u = new UtilityTool();
 
-            walkFrames = new BufferedImage[4][4];
-            attackFrames = new BufferedImage[4][4];
-
-            for (int row = 0; row < 4; row++) {
-                for (int col = 0; col < 4; col++) {
-                    walkFrames[row][col] = uTool.scaleImage(
-                            walkSheet.getSubimage(col * frameWidth, row * frameHeight, frameWidth, frameHeight),
-                            scaled, scaled
-                    );
-                    attackFrames[row][col] = uTool.scaleImage(
-                            attackSheet.getSubimage(col * frameWidth, row * frameHeight, frameWidth, frameHeight),
-                            scaled, scaled
-                    );
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    BufferedImage sub = sheet.getSubimage(c * frameW, r * frameH, frameW, frameH);
+                    frames[r][c] = u.scaleImage(sub, scale, scale);
                 }
             }
+
+            return frames;
         } catch (Exception e) {
             e.printStackTrace();
+            return new BufferedImage[0][0];
         }
     }
 
@@ -57,4 +59,22 @@ public class Goblin extends Enemy {
     @Override protected int getAttackFrameLength() { return 4; }
     @Override protected int getAttackFrameToHit() { return 2; }
     @Override protected int getAttackSpeed() { return 10; }
+    @Override public int getDamage() { return attackDamage; }
+
+    // Optional: override draw to skip hurt/death logic since they don’t exist
+    @Override
+    public void draw(Graphics2D g2) {
+        if (!alive) return;
+
+        BufferedImage image = isAttacking
+                ? attackFrames[directionNum][attackFrameIndex % attackFrames[directionNum].length]
+                : walkFrames[directionNum][walkFrameIndex % walkFrames[directionNum].length];
+
+        int screenX = worldX - gp.player.worldX + gp.player.screenX;
+        int screenY = worldY - gp.player.worldY + gp.player.screenY;
+
+        g2.drawImage(image, screenX, screenY, null);
+        g2.setColor(Color.RED);
+        g2.fillRect(screenX + 32 - currentHP * 5, screenY - 10, currentHP * 10, 5);
+    }
 }

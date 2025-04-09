@@ -6,6 +6,12 @@ import java.awt.image.BufferedImage;
 public class PlayerAttack {
     private final Player player;
 
+    public long specialCooldownStart = 0;
+    public long ultimateCooldownStart = 0;
+
+    private final int SPECIAL_COOLDOWN_MS = 4000;
+    private final int ULTIMATE_COOLDOWN_MS = 8000;
+
     public PlayerAttack(Player player) {
         this.player = player;
     }
@@ -76,6 +82,49 @@ public class PlayerAttack {
                     enemy.takeDamage(damage);
                 }
             }
+        }
+    }
+
+    // === Cooldown Logic ===
+
+    public float cooldownRemaining(long startTime, int cooldownMs) {
+        long now = System.currentTimeMillis();
+        long timePassed = now - startTime;
+        return Math.max(0, (cooldownMs - timePassed) / 1000f);
+    }
+
+    public boolean isSpecialReady() {
+        return System.currentTimeMillis() - specialCooldownStart >= SPECIAL_COOLDOWN_MS;
+    }
+
+    public boolean isUltimateReady() {
+        return System.currentTimeMillis() - ultimateCooldownStart >= ULTIMATE_COOLDOWN_MS;
+    }
+
+    public void startAttack() {
+        player.attacking = true;
+        player.attackFrameIndex = 0;
+        player.attackTimer = 0;
+        player.alreadyHit = false;
+    }
+
+    public void startSpecial() {
+        if (isSpecialReady()) {
+            player.usingSpecial = true;
+            specialCooldownStart = System.currentTimeMillis();
+            player.attackFrameIndex = 0;
+            player.attackTimer = 0;
+            player.alreadyHit = false;
+        }
+    }
+
+    public void startUltimate() {
+        if (isUltimateReady()) {
+            player.usingUltimate = true;
+            ultimateCooldownStart = System.currentTimeMillis();
+            player.attackFrameIndex = 0;
+            player.attackTimer = 0;
+            player.alreadyHit = false;
         }
     }
 }
